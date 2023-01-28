@@ -1,5 +1,8 @@
 <template>
-  <div v-bind:class="{ background__men: isMen, background__women: isWomen }">
+  <div
+    v-if="!isLoading"
+    v-bind:class="{ background__men: isMen, background__women: !isMen }"
+  >
     <div class="container">
       <!-- product image -->
       <img :src="product.image" alt="product picture" class="image__product" />
@@ -8,9 +11,9 @@
       <div class="desc__product">
         <!-- title -->
         <h1
-          :class="{
+          v-bind:class="{
             'title__product-men': isMen,
-            'title__product-women': isWomen,
+            'title__product-women': !isMen,
           }"
         >
           {{ product.title }}
@@ -30,7 +33,7 @@
         <h3
           :class="{
             'price__product-men': isMen,
-            'price__product-women': isWomen,
+            'price__product-women': !isMen,
           }"
         >
           ${{ product.price }}
@@ -40,7 +43,7 @@
           <button
             v-bind:class="{
               'buy__button-men': isMen,
-              'buy__button-women': isWomen,
+              'buy__button-women': !isMen,
             }"
           >
             Buy now
@@ -48,7 +51,7 @@
           <button
             :class="{
               'next__button-men': isMen,
-              'next__button-women': isWomen,
+              'next__button-women': !isMen,
             }"
             @click="nextProduct"
           >
@@ -57,6 +60,9 @@
         </div>
       </div>
     </div>
+  </div>
+  <div v-else-if="isLoading">
+    <div class="loader"></div>
   </div>
 </template>
 
@@ -69,8 +75,8 @@ export default {
     return {
       product: {}, // data api
       index: 1, // index
-      isMen: null, // category
-      isWomen: null,
+      isMen: true, // category
+      isLoading: true, // laoding
     };
   },
   methods: {
@@ -82,6 +88,7 @@ export default {
     },
     // function to fetch next index product of FakeStore API
     async nextProduct() {
+      // setting index product fakestore api
       this.index += 1;
       if (this.index > 20) {
         this.index = 1;
@@ -91,6 +98,7 @@ export default {
       const response = await axios.get(
         `https://fakestoreapi.com/products/${this.index}`
       );
+      this.isLoading = true;
       // filtering and checking the category, only save data of men or women
       if (
         response.data.category === "men's clothing" ||
@@ -100,10 +108,11 @@ export default {
         if (response.data.category === "men's clothing") {
           this.isMen = true;
         } else if (response.data.category === "women's clothing") {
-          this.isWomen = true;
+          this.isMen = false;
         }
         // save data responses api
         this.product = response.data;
+        this.isLoading = false;
       } else {
         this.nextProduct();
       }
@@ -124,9 +133,10 @@ export default {
       if (data.category === "men's clothing") {
         this.isMen = true;
       } else if (data.category === "women's clothing") {
-        this.isWomen = true;
+        this.isMen = false;
       }
       // save data responses api
+      this.isLoading = false;
       this.product = data;
     } else {
       this.nextProduct();
@@ -136,15 +146,33 @@ export default {
 </script>
 
 <style scoped>
-:root {
-  --dark-blue: #002772;
-  --light-blue: #d6e6ff;
-  --dark-red: #720060;
-  --light-red: #fde2ff;
-  --black: #1e1e1e;
-  --light-black: #3f3f3f;
-  --gray: #dcdcdc;
-  --white: #ffffff;
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 .background__women {
   width: 100%;
@@ -152,7 +180,7 @@ export default {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: var(--light-red);
+  background-color: #fde2ff;
 }
 .background__men {
   width: 100%;
@@ -160,14 +188,14 @@ export default {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: var(--light-blue);
+  background-color: #d6e6ff;
 }
 .container {
   position: relative;
 
   margin: 40px;
   padding: 20px;
-  background: var(--white);
+  background: #ffffff;
   box-shadow: 1px 1px 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 10px;
 
@@ -200,13 +228,13 @@ export default {
   font-weight: 600;
   font-size: 28px;
   line-height: 34px;
-  color: var(--dark-red);
+  color: #720060;
 }
 .title__product-men {
   font-weight: 600;
   font-size: 28px;
   line-height: 34px;
-  color: var(--dark-blue);
+  color: #002772;
 }
 
 .category__product {
@@ -215,7 +243,7 @@ export default {
   justify-content: space-between;
   font-weight: 400;
   font-size: 18px;
-  color: var(--light-black);
+  color: #3f3f3f;
 }
 
 .description__product {
@@ -233,13 +261,13 @@ export default {
   font-weight: 600;
   font-size: 28px;
   text-align: left;
-  color: var(--dark-red);
+  color: #720060;
 }
 .price__product-men {
   font-weight: 600;
   font-size: 28px;
   text-align: left;
-  color: var(--dark-blue);
+  color: #002772;
 }
 
 .button {
@@ -252,48 +280,48 @@ export default {
 .buy__button-women {
   width: 259px;
   height: 42px;
-  background-color: var(--dark-red);
+  background-color: #720060;
   border-radius: 4px;
   margin-right: 20px;
 
   font-weight: 600;
   font-size: 24px;
-  color: var(--white);
+  color: #ffffff;
 }
 .buy__button-men {
   width: 259px;
   height: 42px;
-  background-color: var(--dark-blue);
+  background-color: #002772;
   border-radius: 4px;
   margin-right: 20px;
 
   font-weight: 600;
   font-size: 24px;
-  color: var(--white);
+  color: #ffffff;
 }
 
 .next__button-women {
   width: 259px;
   height: 42px;
 
-  border: 3px solid var(--dark-red);
-  background-color: var(--white);
+  border: 3px solid #720060;
+  background-color: #ffffff;
   border-radius: 4px;
 
   font-weight: 600;
   font-size: 24px;
-  color: var(--dark-red);
+  color: #720060;
 }
 .next__button-men {
   width: 259px;
   height: 42px;
 
-  border: 3px solid var(--dark-blue);
-  background-color: var(--white);
+  border: 3px solid #002772;
+  background-color: #ffffff;
   border-radius: 4px;
 
   font-weight: 600;
   font-size: 24px;
-  color: var(--dark-blue);
+  color: #002772;
 }
 </style>
